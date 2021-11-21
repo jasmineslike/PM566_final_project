@@ -1,1 +1,16 @@
+---
+title: "PM566 Final Project"
+author: "Lili Xu"
+output: 
+    html_document:
+        toc: TRUE
+        toc_float: TRUE
+---
 
+<br>
+
+This is my PM566 Final Project website. I will showcase a few interactive visuals here.
+
+(Your output should look something like this)
+
+<br>
