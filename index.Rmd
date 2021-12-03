@@ -7,7 +7,7 @@ output:
         toc_float: TRUE
 ---
 
-This is my PM566 Final Project website.
+
 
 ```{r setup, message=FALSE, echo=FALSE, warning=FALSE}
 library(data.table)
@@ -16,14 +16,15 @@ library(dplyr)
 library(plotly)
 library(DT)
 library(knitr)
+library(stringr)
+library(sjPlot)
+library(ggthemes)
+library(scales)
 ```
 
-```{r load-data, echo=FALSE}
-source("process_COVID_data.R")
-```
 
 
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 # Initialize code chunk options
 opts_chunk$set(
   warning = FALSE,
@@ -31,51 +32,248 @@ opts_chunk$set(
   eval=TRUE,
   echo = TRUE,
   cache = FALSE,
-  fig.width = 7, 
+  fig.width = 9, 
   fig.align = 'center',
   fig.asp = 0.618,
   out.width = "700px")
 ```
 
 
-```{r}
-source("process_COVID_data.R")
-p1_scatter <- cv_states_today %>% 
-  plot_ly(x = ~pop_density, y = ~deathsper100k,
-          type = 'scatter', mode = 'markers', color = ~state,
-          size = ~population, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5),
-          hoverinfo = 'text',
-          text = ~paste( paste(state, ":", sep=""), paste(" Cases per 100k: ", per100k, sep="") , paste(" Deaths per 100k: ",
-                        deathsper100k, sep=""), sep = "<br>")) %>%
-  layout(title = "Population-normalized COVID-19 deaths vs. population density",
-                  yaxis = list(title = "Deaths per 100k"), xaxis = list(title = "Population Density"),
-         hovermode = "compare")
-# filter out "District of Columbia"
-cv_states_today_scatter <- cv_states_today %>% filter(state!="District of Columbia")
-p2_scatter <- cv_states_today_scatter %>% 
-  plot_ly(x = ~pop_density, y = ~deathsper100k,
-          type = 'scatter', mode = 'markers', color = ~state,
-          size = ~population, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5),
-          hoverinfo = 'text',
-          text = ~paste( paste(state, ":", sep=""), paste(" Cases per 100k: ", per100k, sep="") , paste(" Deaths per 100k: ",
-                        deathsper100k, sep=""), sep = "<br>")) %>%
-  layout(title = "Population-normalized COVID-19 deaths vs. population density",
-                  yaxis = list(title = "Deaths per 100k"), xaxis = list(title = "Population Density"),
-         hovermode = "compare")
+# Introduction
+
+The COVID-19 pandemic not only affects the global economy, but also seriously affects people's health and lifestyle. Since the outbreak of COVID-19, no one in the world has been spared. The prevention and control of national epidemics has become the top issue for all countries. As the most advanced countries in the world, Europe and the United States have the medical technology of the world’s hospitals, but they have given the world’s people the worst answer. The number of Americans who died due to the epidemic has surpassed World War I, and the number of deaths and the total number of people in the Vietnam War. It is expected that by the end of the year, it will not be able to overcome the epidemic and return to normal life. The COVID-19 in the United States has gone out of control. So far, more than 770,000 people have died from the new crown virus.
+
+Based on the current official data, we can consider which factors are the main reasons for the increase in confirmed cases and deaths. What are the follow-up solutions? According to the current situation in the United States, the following questions can be asked:
+
+1. In the United States, Can age be one of the factors in our research on COVID-19?
+  - Situation Overview: Daily Trends in Number of COVID-19 Cases/Death in The United States
+  - Age Factor: COVID-19 Cases and Deaths in the USA By Different Age Groups
+  - COVID-19 hospitalizations: Rates of COVID-19-Associated hospitalizations
+  - Vaccination situation: People Receiving COVID-19 Vaccinations in the United States
+
+# Method
+1. Data source
+CDC COVID Data Tracker is CDC’s home for COVID-19 data. It provides surveillance data from across the response, including hospitalizations, vaccinations, demographic information, and daily and cumulative case and death counts reported to CDC since January 21, 2020.
+  - Daily case trends in the USA: https://covid.cdc.gov/covid-data-tracker/#trends_dailycases
+  - Daily Death trends in the USA: https://covid.cdc.gov/covid-data-tracker/#trends_dailydeaths
+  - Cases by age group: https://covid.cdc.gov/covid-data-tracker/#demographics
+  - Deaths by age group: https://covid.cdc.gov/covid-data-tracker/#demographics
+  - Rates of COVID-19-Associated hospitalizations: https://covid.cdc.gov/covid-data-tracker/#covidnet-hospitalization-network
+  - Age Groups of People with at least One Dose Administered: https://covid.cdc.gov/covid-data-tracker/#vaccination-demographic
+  - Age Groups of People Fully Vaccinated: https://covid.cdc.gov/covid-data-tracker/#vaccination-demographic
+
+2. EDA checklist
+
+  - data.table: read data from csv files
+  - tidyverse: data clean
+  - knitr: knitr the document and produce nice-look markdown tables
+
+3. Data visualization
+  - ggplot: produce the graphs
+  - plotly:interactive graphs
+
+
+# Preliminary Results
+
+### Situation Overview: Daily Trends in Number of COVID-19 Cases/Death in The United States
+
+Since the epidemic has swept across the United States, the number of confirmed cases and deaths has been increasing every day. Can we find some factors by observing the growth rate and timing of the epidemic?
+Here are two graphs showing the number of confirmed cases and the number of deaths of COVID-19 each day.
+
+```{r cases-tendency, message=FALSE, echo=FALSE, warning=FALSE}
+daily_case <- fread("data/data_table_for_daily_case_trends__the_united_states.csv")
+daily_death <- fread("data/data_table_for_daily_death_trends__the_united_states.csv")
+
+daily_case$Date = as.Date(daily_case$Date,"%B%d%Y")
+daily_death$Date = as.Date(daily_death$Date,"%B%d%Y")
+
+colnames(daily_case)[3] <- "New_Case"
+colnames(daily_case)[4] <- "days_7_moving"
+
+colnames(daily_death)[3] <- "New_Death"
+colnames(daily_death)[4] <- "days_7_moving"
+
+p1 <- daily_case %>%
+  ggplot() +
+  geom_bar(aes(x = Date, y= New_Case), stat="identity", position=position_dodge(), fill = "palegreen1" ) +
+  geom_line(aes(x = Date, y= days_7_moving), color="plum3", group = 1) +
+  theme(plot.title = element_text(hjust = 0.5),legend.position = "none") +
+  labs(title = "Figure 1: Daily Trends in Number of COVID-19 Cases in The United States", x = "Date", y = "Daily Cases") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  scale_y_continuous(labels = label_number(suffix = " K", scale = 1e-3))
+ggplotly(p1)
+
+p2 <- daily_death %>%
+  ggplot() +
+  geom_bar(aes(x = Date, y= New_Death), stat="identity", position=position_dodge(), fill = "mistyrose2" ) +
+  geom_line(aes(x = Date, y= days_7_moving), color="skyblue2", group = 1) +
+  theme(plot.title = element_text(hjust = 0.5),legend.position = "none") +
+  labs(title = "Figure 2: Daily Trends in Number of COVID-19 Deaths in The United States", x = "Date", y = "Daily Deaths") +
+  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+ggplotly(p2)
+
 ```
 
-## Showcasing plots {.tabset}
+**Figure 1** The number of newly positive cases was well controlled in May and June of 2021, and the number was the lowest. However, in the winter of 2020, the number of newly positive cases will be the largest for a period of time. Maybe this is because the influenza virus still exists in winter, causing everyone's immunity to decline and the infection rate to increase. However, we can also observe that from early July to mid-October 2021, the number of newly positive cases has reached a small peak. Due to the good results of the epidemic control from May to June 2021, the mask order was lifted and the number of newly positive cases gradually increased.
 
-### Tab 1
+**Figure 2** There are three peak death intervals. The first peak period is around April 2020. During this time, the COVID-19 in the United States has just begun to plunder, and medical equipment and resources are insufficient, resulting in a high death rate. The second peak is around December 2020. During this period, the United States is at the peak of COVID-19 and influenza viruses. Due to the cold weather and declining immunity, the death rate is also the highest. The third peak is around September 2021. During this period, due to the lifting of the mask order, the increase in the number of new positive cases led to a rapid increase in the number of deaths.
 
-```{r echo=FALSE}
-p1_scatter
+
+### Age Factor: COVID-19 Cases and Deaths in the USA By Different Age Groups
+
+```{r age, message=FALSE, echo=FALSE, warning=FALSE}
+age_case <- fread("data/cases_by_age_group.csv")
+age_death <- fread("data/deaths_by_age_group.csv")
+
+age_case$percentage = age_case$Count*100/sum(age_case$Count)
+age_death$percentage = age_death$Count*100/sum(age_death$Count)
+
+age_case$label  = "COVID-19 Cases"
+age_death$label  = "COVID-19 Deaths"
+
+age <- rbind(age_case, age_death,fill=TRUE)
+
+colnames(age)[1] <- "age"
+
+age$age = factor(age$age, levels = c("0-4 Years","5-11 Years", "12-15 Years", "16-17 Years","18-29 Years","30-39 Years", "40-49 Years","50-64 Years","65-74 Years","75-84 Years","85+ Years"))
+
+p3 <- age %>%
+  ggplot(aes(x = age, y= percentage, fill = label)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  geom_smooth(aes(group=1), method = "loess", se = FALSE) +
+  scale_fill_brewer(palette = "Pastel2") +
+  labs(title = "Figure 3: COVID-19 Cases and Deaths in the USA By Different Age Groups", y = "Precentage(%)") +
+  facet_wrap(~label) +
+  theme(text = element_text(size=10),
+        axis.text.x = element_text(angle=50, hjust=1))
+
+ggplotly(p3)
+
 ```
 
-### Tab 2
 
-```{r echo=FALSE}
-p2_scatter
+**Figure 3** Among the new cases, the infection rate is highest among the young and middle-aged people, especially young people aged 18-29 and middle-aged people aged 50-64. However, among the deaths, those people who over 50 years old have a higher death rate, which is completely different from the new cases. Elderly people over 85 have the highest mortality rate. It may be due to the weakened immunity of the elderly, leading to an increase in death rates.
+
+
+### COVID-19 hospitalizations: Rates of COVID-19-Associated hospitalizations
+```{r hospitalizations, message=FALSE, echo=FALSE, warning=FALSE}
+hosp <- fread("data/Weekly_Data_Percent.csv")
+
+hosp <- separate(hosp, "WEEK_NUMBER", c("Year", "Week"), sep = "-")
+
+hosp$Week = as.character(as.numeric(hosp$Week)-1)
+
+hosp$Date = as.Date(paste(hosp$Year, hosp$Week, 0, sep="-"), "%Y-%U-%w")
+
+
+hosp_melted = melt(hosp, id.vars="Date",measure.vars=c("0-4 YR","5-17 YR","18-49 YR","50-64 YR","65+ YR"), value.name="percentage(%)")
+
+
+p <- hosp %>%
+   plot_ly(x=~Date, y=~`0-4 YR`, type="scatter", mode="lines", name = "0-4 YR",
+          hoverinfo="text",
+          text=~paste(paste("Date: ", Date),
+                      paste("0-4 Years: ", `0-4 YR`),
+                      sep="<br>"))%>%
+    layout(title="Figure 4: Rates of COVID-19-Associated hospitalizations by Different Age Groups",
+           xaxis=list(title="Date"),
+           yaxis=list(title="Rate"))
+p <- p %>%
+     add_trace(x=hosp[["Date"]], y=hosp[["5-17 YR"]], type="scatter", mode="lines", name = "5-17 YR",
+              hoverinfo="text",
+              text=~paste(paste("Date: ", Date),
+                      paste("5-17 Years: ", hosp[["5-17 YR"]]),
+                      sep="<br>"))
+p <- p %>%
+     add_trace(x=hosp[["Date"]], y=hosp[["18-49 YR"]], type="scatter", mode="lines",name = "18-49 YR",
+              hoverinfo="text",
+              text=~paste(paste("Date: ", Date),
+                      paste("18-49 Years: ", hosp[["18-49 YR"]]),
+                      sep="<br>"))
+p <- p %>%
+     add_trace(x=hosp[["Date"]], y=hosp[["50-64 YR"]], type="scatter", mode="lines",name = "50-64 YR",
+              hoverinfo="text",
+              text=~paste(paste("Date: ", Date),
+                      paste("50-64 Years: ", hosp[["18-49 YR"]]),
+                      sep="<br>"))
+p <- p %>%
+     add_trace(x=hosp[["Date"]], y=hosp[["65+ YR"]], type="scatter", mode="lines",name = "65+ YR",
+              hoverinfo="text",
+              text=~paste(paste("Date: ", Date),
+                      paste("65+ Years: ", hosp[["18-49 YR"]]),
+                      sep="<br>"))
+p
+
+
+#hosp_melted %>%
+#  ggplot(aes(x = Date, y = `percentage(%)`, color = variable)) +  
+#  geom_point() + 
+#  geom_line() +
+#  labs(title = "COVID-19 cases and deaths in the US By Different Age Groups", x = "age(Years)", y = "Precentage(%)") +
+#  theme(panel.background = element_blank(), axis.line = element_line(colour = "black"))+
+#  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+#  scale_x_date(date_breaks = "months" , date_labels = "%b-%y")+
+#  theme(text = element_text(size=10),
+#        axis.text.x = element_text(angle=50, hjust=1))
+
+
 ```
 
-{-}
+**Figure 4** Among the five age groups, the hospitalization rate for people over 65 is the highest. People aged 18-49 and those aged 50-64 have the lowest hospitalization rates in the winter of 2020, while the hospitalization rate for people over 65 reaches its peak. Around June 2021, the hospitalization rate for the elderly has dropped a lot, while the hospitalization rate for people aged 18 to 49 has increased a lot.
+
+
+### Vaccination situation: People Receiving COVID-19 Vaccinations in the United States
+```{r vaccine, message=FALSE, echo=FALSE, warning=FALSE}
+one_does <- fread("data/age_groups_of_people_with_at_least_one_dose_administered.csv")
+full_does <- fread("data/age_groups_of_people_fully_vaccinated.csv")
+
+colnames(one_does)[1] <- "age"
+colnames(one_does)[2] <- "People_at_least_One_Dose"
+colnames(one_does)[4] <- "US_Population"
+colnames(one_does)[5] <- "People_initiated_vaccination_in_Last_14_Days"
+
+
+one_does$age = factor(one_does$age, levels = c("5–11 yrs", "12–17 yrs","18–24 yrs","25–39 yrs", "40–49 yrs","50–64 yrs","65–74 yrs","75+ yrs"))
+p4 <- one_does %>%
+    select(age,People_at_least_One_Dose,US_Population,People_initiated_vaccination_in_Last_14_Days) %>%
+    plot_ly(x=~age,y=~People_at_least_One_Dose, type="bar", name="% People at least One Dose") %>%
+    add_trace(y=~US_Population, name="% US Population") %>%
+    layout(title="Figure 5: COVID-19: Age Groups of People with at least One Dose Administered", yaxis = list(title = 'Count'), barmode = 'dodge')
+
+
+colnames(full_does)[1] <- "age"
+colnames(full_does)[2] <- "People_Fully_Vaccinated"
+colnames(full_does)[4] <- "US_Population"
+colnames(full_does)[5] <- "People_completed_vaccination_in_Last_14_Days"
+
+
+full_does$age = factor(full_does$age, levels = c("5–11 yrs", "12–17 yrs","18–24 yrs","25–39 yrs", "40–49 yrs","50–64 yrs","65–74 yrs","75+ yrs"))
+p5 <- full_does %>%
+    select(age,People_Fully_Vaccinated,US_Population,People_completed_vaccination_in_Last_14_Days) %>%
+    plot_ly(x=~age,y=~People_Fully_Vaccinated, type="bar", name="% People Fully Vaccinated") %>%
+    add_trace(y=~US_Population, name="% US Population") %>%
+    layout(title="COVID-19 Age Groups of People Fully Vaccinated", yaxis = list(title = 'Count'), barmode = 'dodge')
+
+fig <- subplot(p4, p5) %>% 
+  layout(title = 'Figure 5: at least One Dose Administered Vs. Fully Vaccinated')
+fig
+
+```
+
+**Figure 5** Comparing the two vaccination rates, except for people aged 5-11, the rates of at least one shot of the vaccine and the complete vaccination of other age groups are very close, indicating that most of these people have already been vaccinated. For people aged 5-11, because the age limit for vaccination has been recent released, there is huge difference between at least one dose and fully vaccinated. Most children have received at least one injection, and only 0.3% of the children have been vaccinated. According to the comparison of the vaccination rate and the U.S. population, because many people who are not citizens of the U.S. are also vaccinated, the vaccine rate will account for more than the population. But this is very obvious that there are still many children who have not been vaccinated, and the vaccine completion rate will increase substantially in the future.
+
+
+# Summary
+
+Based on the above information, we can draw the following conclusion：
+
+Age is one of the factors that can be used in our research on COVID-19. People of different ages have very different infection rates and death rates, so we can study how the human body works to resist the COVID-19. At the same time, the hospitalization rates for people of different age groups are also very different. The elderly are the group of people who have suffered the most from the epidemic. There may be other factors. For example, the mandatory implementation of the mask order can reduce the virus infection rate, the cold weather causes the infection rate to increase, some people are unwilling to wear masks which cause the infection rate rises, and the lack of medical resources leads to an increase in the death rate, and so on. At present, the most effective way is to inject the vaccine. Most Americans have already completed the vaccination. The main goal now is to increase the vaccination rate of children, which can more effectively prevent the COVID-19. There are also many elderly people with weakened immunity who need to be injected with booster dose, which will be better protected.
+
+
+
+
+
+

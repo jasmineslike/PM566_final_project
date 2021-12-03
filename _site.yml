@@ -1,10 +1,23 @@
 name: "my-website"
 output_dir: "."
 navbar:
-  title: "PM566 Final Project"
+  title: "Final Project"
   left:
     - text: "Home"
       href: index.html
+    - text: "Lab 12"
+      href: Lab12.html
+    - text: "CDC Dataset"
+      href: https://covid.cdc.gov/covid-data-tracker/#trends_dailycases
+      
+  right:
+    - icon: fa-github fa-lg
+      href: https://github.com/USCbiostats/PM566
+    - text: "Full Report Download"
+      href: https://github.com/USCbiostats/PM566
+
 output:
-  html_document:
-    theme: cosmo
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    
