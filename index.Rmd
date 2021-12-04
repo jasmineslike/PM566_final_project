@@ -22,8 +22,6 @@ library(ggthemes)
 library(scales)
 ```
 
-
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 # Initialize code chunk options
 opts_chunk$set(
@@ -41,7 +39,7 @@ opts_chunk$set(
 
 # Introduction
 
-The COVID-19 pandemic not only affects the global economy, but also seriously affects people's health and lifestyle. Since the outbreak of COVID-19, no one in the world has been spared. The prevention and control of national epidemics has become the top issue for all countries. As the most advanced countries in the world, Europe and the United States have the medical technology of the world’s hospitals, but they have given the world’s people the worst answer. The number of Americans who died due to the epidemic has surpassed World War I, and the number of deaths and the total number of people in the Vietnam War. It is expected that by the end of the year, it will not be able to overcome the epidemic and return to normal life. The COVID-19 in the United States has gone out of control. So far, more than 770,000 people have died from the new crown virus.
+The COVID-19 pandemic not only affects the global economy, but also seriously affects people's health and lifestyle. Since the outbreak of COVID-19, no one in the world has been spared. The prevention and control of national epidemics has become the top issue for all countries. As the most advanced countries in the world, Europe and the United States have the medical technology of the world’s hospitals, but they have given the world’s people the worst answer. The number of Americans who died due to the epidemic has surpassed World War I, and the number of deaths and the total number of people in the Vietnam War. It is expected that by the end of the year, it will not be able to overcome the epidemic and return to normal life. The COVID-19 in the United States has gone out of control. So far, more than 770,000 people have died from the COVID-19.
 
 Based on the current official data, we can consider which factors are the main reasons for the increase in confirmed cases and deaths. What are the follow-up solutions? According to the current situation in the United States, the following questions can be asked:
 
