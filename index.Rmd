@@ -1,5 +1,5 @@
 ---
-title: "PM566 Final Project"
+title: "Exploring the relationship between Age and Covid-19 in the USA"
 author: "Lili Xu"
 output: 
     html_document:

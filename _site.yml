@@ -11,10 +11,8 @@ navbar:
       href: https://covid.cdc.gov/covid-data-tracker/#trends_dailycases
       
   right:
-    - icon: fa-github fa-lg
-      href: https://github.com/USCbiostats/PM566
     - text: "Full Report Download"
-      href: https://github.com/USCbiostats/PM566
+      href: PM566_FinalReport.pdf
 
 output:
   prettydoc::html_pretty:
